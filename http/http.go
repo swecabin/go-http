@@ -17,7 +17,8 @@ type httpwrapper struct {
 }
 
 // Function to make HTTP request. method - HTTP method like GET, POST.
-// url - HTTP Request URL. req, res - Request and response of the HTTP request.
+// url - HTTP Request URL. req - Request of HTTP request
+// res - Pointer to response object
 func (h *httpwrapper) MakeRequest(method, url string, req, res interface{}) error {
 	client := &http.Client{
 		Timeout: time.Duration(h.c.Timeout) * time.Second,

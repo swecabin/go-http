@@ -13,9 +13,10 @@ type Config struct {
 // Creates and initialises config to default values
 func NewConfig() *Config {
 	return &Config{
-		Timeout: 10,
-		Retries: 3,
-		Headers: make(map[string]string),
+		Timeout:     10,
+		Retries:     3,
+		Headers:     make(map[string]string),
+		retryFactor: 2,
 	}
 }
 
