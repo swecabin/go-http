@@ -6,10 +6,11 @@ type Config struct {
 	// No of Retries in count - Default - 3
 	Retries int
 	// Headers for the http request
-	Headers map[string]string
+	Headers     map[string]string
+	retryFactor float64
 }
 
-// Creates and initialised config to default values
+// Creates and initialises config to default values
 func NewConfig() *Config {
 	return &Config{
 		Timeout: 10,
@@ -18,7 +19,7 @@ func NewConfig() *Config {
 	}
 }
 
-// Add new HTTP header for all requests. k - key of header (Authorisation etc.)
+// Function to add new HTTP header for all requests. k - key of header (Authorisation etc.)
 // v - Value of the header
 func (c *Config) AddHeader(k, v string) {
 	c.Headers[k] = v
