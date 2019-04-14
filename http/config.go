@@ -9,6 +9,7 @@ type Config struct {
 	Headers map[string]string
 }
 
+// Creates and initialised config to default values
 func NewConfig() *Config {
 	return &Config{
 		Timeout: 10,
@@ -17,6 +18,8 @@ func NewConfig() *Config {
 	}
 }
 
+// Add new HTTP header for all requests. k - key of header (Authorisation etc.)
+// v - Value of the header
 func (c *Config) AddHeader(k, v string) {
 	c.Headers[k] = v
 }
