@@ -21,7 +21,7 @@ type httpwrapper struct {
 // res - Pointer to response object
 func (h *httpwrapper) MakeRequest(method, url string, req, res interface{}) error {
 	client := &http.Client{
-		Timeout: time.Duration(h.c.Timeout) * time.Second,
+		Timeout: time.Duration(h.c.timeout) * time.Second,
 	}
 
 	var retries int
@@ -42,7 +42,7 @@ func (h *httpwrapper) MakeRequest(method, url string, req, res interface{}) erro
 			return err
 		}
 
-		for k, v := range h.c.Headers {
+		for k, v := range h.c.headers {
 			request.Header.Set(k, v)
 		}
 
@@ -51,7 +51,7 @@ func (h *httpwrapper) MakeRequest(method, url string, req, res interface{}) erro
 			h.l.Errorf("Unable to send HTTP Req. Err: %+v", err)
 			time.Sleep(time.Second * time.Duration(int(math.Pow(h.c.retryFactor, float64(retries)))))
 			retries++
-			if retries > h.c.Retries {
+			if retries > h.c.retries {
 				continue
 			}
 
@@ -62,7 +62,7 @@ func (h *httpwrapper) MakeRequest(method, url string, req, res interface{}) erro
 			h.l.Errorf("Response code is greater than 500. Code: %d", response.StatusCode)
 			time.Sleep(time.Second * time.Duration(int(math.Pow(h.c.retryFactor, float64(retries)))))
 			retries++
-			if retries > h.c.Retries {
+			if retries > h.c.retries {
 				continue
 			}
 

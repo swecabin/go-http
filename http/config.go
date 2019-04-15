@@ -2,20 +2,20 @@ package http
 
 type Config struct {
 	// HTTP timeout in seconds. Default - 10 second
-	Timeout int
+	timeout int
 	// No of Retries in count - Default - 3
-	Retries int
+	retries int
 	// Headers for the http request
-	Headers     map[string]string
+	headers     map[string]string
 	retryFactor float64
 }
 
 // Creates and initialises config to default values
 func NewConfig() *Config {
 	return &Config{
-		Timeout:     10,
-		Retries:     3,
-		Headers:     make(map[string]string),
+		timeout:     10,
+		retries:     3,
+		headers:     make(map[string]string),
 		retryFactor: 2,
 	}
 }
@@ -23,5 +23,20 @@ func NewConfig() *Config {
 // Function to add new HTTP header for all requests. k - key of header (Authorisation etc.)
 // v - Value of the header
 func (c *Config) AddHeader(k, v string) {
-	c.Headers[k] = v
+	c.headers[k] = v
+}
+
+// Function to Set timeout for each HTTP requests
+func (c *Config) SetTimeout(timeout int) {
+	c.timeout = timeout
+}
+
+// Function to set number of reties
+func (c *Config) SetRetries(retries int) {
+	c.retries = retries
+}
+
+// Function to set retry factor for exponential backoff
+func (c *Config) SetRetryFactor(factor float64) {
+	c.retryFactor = factor
 }
