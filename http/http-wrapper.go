@@ -5,7 +5,7 @@ import (
 )
 
 type HttpWrapper interface {
-	MakeRequest(method, url string, req, res interface{}) error
+	MakeRequest(method, url, name string, req, res interface{}) error
 }
 
 func New(config *Config, l *log.Logger) HttpWrapper {

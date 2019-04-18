@@ -19,7 +19,7 @@ type httpwrapper struct {
 // Function to make HTTP request. method - HTTP method like GET, POST.
 // url - HTTP Request URL. req - Request of HTTP request
 // res - Pointer to response object
-func (h *httpwrapper) MakeRequest(method, url string, req, res interface{}) error {
+func (h *httpwrapper) MakeRequest(method, url, name string, req, res interface{}) error {
 	client := &http.Client{
 		Timeout: time.Duration(h.c.timeout) * time.Second,
 	}
@@ -36,6 +36,7 @@ func (h *httpwrapper) MakeRequest(method, url string, req, res interface{}) erro
 			}
 		}
 
+		s := time.Now()
 		request, err := http.NewRequest(method, url, bytes.NewBuffer(body))
 		if err != nil {
 			h.l.Errorf("Unable to create new HTTP Req. Err: %+v", err)
@@ -57,6 +58,14 @@ func (h *httpwrapper) MakeRequest(method, url string, req, res interface{}) erro
 
 			return err
 		}
+
+		go h.l.Log(&log.Log{
+			DependancyName: name,
+			DependancyType: log.DependancyTypeHTTP,
+			TimeTaken:      time.Since(s).Seconds(),
+			Title:          url,
+			Message:        url,
+		})
 
 		if response.StatusCode >= http.StatusInternalServerError {
 			h.l.Errorf("Response code is greater than 500. Code: %d", response.StatusCode)
