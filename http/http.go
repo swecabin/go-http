@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/FenixAra/go-prom/prom"
 	"github.com/FenixAra/go-util/log"
 )
 
@@ -50,6 +51,7 @@ func (h *httpwrapper) MakeRequest(method, url, name string, req, res interface{}
 		response, err := client.Do(request)
 		if err != nil {
 			h.l.Errorf("Unable to send HTTP Req. Err: %+v", err)
+			prom.TrackDependency(prom.DependencyHTTP, name, prom.StatusFailed, time.Since(s).Seconds())
 			time.Sleep(time.Second * time.Duration(int(math.Pow(h.c.retryFactor, float64(retries)))))
 			retries++
 			if retries > h.c.retries {
@@ -68,6 +70,7 @@ func (h *httpwrapper) MakeRequest(method, url, name string, req, res interface{}
 		})
 
 		if response.StatusCode >= http.StatusInternalServerError {
+			prom.TrackDependency(prom.DependencyHTTP, name, prom.StatusFailed, time.Since(s).Seconds())
 			h.l.Errorf("Response code is greater than 500. Code: %d", response.StatusCode)
 			time.Sleep(time.Second * time.Duration(int(math.Pow(h.c.retryFactor, float64(retries)))))
 			retries++
@@ -79,10 +82,12 @@ func (h *httpwrapper) MakeRequest(method, url, name string, req, res interface{}
 		}
 
 		if response.StatusCode >= http.StatusBadRequest {
+			prom.TrackDependency(prom.DependencyHTTP, name, prom.StatusFailed, time.Since(s).Seconds())
 			h.l.Errorf("Response code is between 400 To 499. Code: %d", response.StatusCode)
 			return err
 		}
 
+		prom.TrackDependency(prom.DependencyHTTP, name, prom.StatusSuccess, time.Since(s).Seconds())
 		if res != nil {
 			content, err := ioutil.ReadAll(response.Body)
 			if err != nil {
