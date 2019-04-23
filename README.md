@@ -27,6 +27,6 @@ func main() {
 	cfg.SetTimeout(5)
 	wrapper := http_wrap.New(cfg, l)
 
-	wrapper.MakeRequest(http.MethodGet, "https://www.google.com", nil, nil)
+	wrapper.MakeRequest(http.MethodGet, "https://www.google.com", "Google", nil, nil)
 }
 ```
