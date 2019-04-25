@@ -1,6 +1,9 @@
 # go-http
 HTTP Wrapper in golang along with mock
 
+[![GoDoc](https://godoc.org/github.com/FenixAra/go-http/http?status.svg)](https://godoc.org/github.com/FenixAra/go-http/http)
+[![Go Report Card](https://goreportcard.com/badge/github.com/FenixAra/go-http/http)](https://goreportcard.com/report/github.com/FenixAra/go-http/http)
+
 To get the latest package: 
 
 ```sh
