@@ -21,6 +21,10 @@ type httpwrapper struct {
 // url - HTTP Request URL. req - Request of HTTP request
 // res - Pointer to response object
 func (h *httpwrapper) MakeRequest(method, url, name string, req, res interface{}) error {
+	if method == http.MethodGet {
+		return h.getRequest(method, url, name, res)
+	}
+
 	client := &http.Client{
 		Timeout: time.Duration(h.c.timeout) * time.Second,
 	}
@@ -39,6 +43,83 @@ func (h *httpwrapper) MakeRequest(method, url, name string, req, res interface{}
 
 		s := time.Now()
 		request, err := http.NewRequest(method, url, bytes.NewBuffer(body))
+		if err != nil {
+			h.l.Errorf("Unable to create new HTTP Req. Err: %+v", err)
+			return err
+		}
+
+		for k, v := range h.c.headers {
+			request.Header.Set(k, v)
+		}
+
+		response, err := client.Do(request)
+		if err != nil {
+			h.l.Errorf("Unable to send HTTP Req. Err: %+v", err)
+			prom.TrackDependency(prom.DependencyHTTP, name, prom.StatusFailed, time.Since(s).Seconds())
+			time.Sleep(time.Second * time.Duration(int(math.Pow(h.c.retryFactor, float64(retries)))))
+			retries++
+			if retries > h.c.retries {
+				continue
+			}
+
+			return err
+		}
+
+		go h.l.Log(&log.Log{
+			DependancyName: name,
+			DependancyType: log.DependancyTypeHTTP,
+			TimeTaken:      time.Since(s).Seconds(),
+			Title:          url,
+			Message:        url,
+		})
+
+		if response.StatusCode >= http.StatusInternalServerError {
+			prom.TrackDependency(prom.DependencyHTTP, name, prom.StatusFailed, time.Since(s).Seconds())
+			h.l.Errorf("Response code is greater than 500. Code: %d", response.StatusCode)
+			time.Sleep(time.Second * time.Duration(int(math.Pow(h.c.retryFactor, float64(retries)))))
+			retries++
+			if retries > h.c.retries {
+				continue
+			}
+
+			return err
+		}
+
+		if response.StatusCode >= http.StatusBadRequest {
+			prom.TrackDependency(prom.DependencyHTTP, name, prom.StatusFailed, time.Since(s).Seconds())
+			h.l.Errorf("Response code is between 400 To 499. Code: %d", response.StatusCode)
+			return err
+		}
+
+		prom.TrackDependency(prom.DependencyHTTP, name, prom.StatusSuccess, time.Since(s).Seconds())
+		if res != nil {
+			content, err := ioutil.ReadAll(response.Body)
+			if err != nil {
+				h.l.Errorf("Unable to read HTTP Response. Err: %+v", err)
+				return err
+			}
+
+			err = json.Unmarshal(content, &res)
+			if err != nil {
+				h.l.Errorf("Unable to unmarshal HTTP Response. Err: %+v", err)
+				return err
+			}
+		}
+
+		response.Body.Close()
+		return nil
+	}
+}
+
+func (h *httpwrapper) getRequest(method, url, name string, res interface{}) error {
+	client := &http.Client{
+		Timeout: time.Duration(h.c.timeout) * time.Second,
+	}
+
+	var retries int
+	for {
+		s := time.Now()
+		request, err := http.NewRequest(method, url, nil)
 		if err != nil {
 			h.l.Errorf("Unable to create new HTTP Req. Err: %+v", err)
 			return err
