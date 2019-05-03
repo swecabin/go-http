@@ -33,7 +33,7 @@ func (h *httpwrapper) MakeRequest(method, url, name string, req, res interface{}
 	for {
 		var body []byte
 		var err error
-		if req == nil {
+		if req != nil {
 			body, err = json.Marshal(req)
 			if err != nil {
 				h.l.Errorf("Unable to marshal req: %+v. Err: %+v", req, err)
