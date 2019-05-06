@@ -45,7 +45,7 @@ func (h *httpwrapper) MakeRequest(method, url, name string, req, res interface{}
 		request, err := http.NewRequest(method, url, bytes.NewBuffer(body))
 		if err != nil {
 			h.l.Errorf("Unable to create new HTTP Req. Err: %+v", err)
-			return err
+			continue
 		}
 
 		for k, v := range h.c.headers {
@@ -58,7 +58,7 @@ func (h *httpwrapper) MakeRequest(method, url, name string, req, res interface{}
 			prom.TrackDependency(prom.DependencyHTTP, name, prom.StatusFailed, time.Since(s).Seconds())
 			time.Sleep(time.Second * time.Duration(int(math.Pow(h.c.retryFactor, float64(retries)))))
 			retries++
-			if retries > h.c.retries {
+			if retries < h.c.retries {
 				continue
 			}
 
@@ -78,7 +78,7 @@ func (h *httpwrapper) MakeRequest(method, url, name string, req, res interface{}
 			h.l.Errorf("Response code is greater than 500. Code: %d", response.StatusCode)
 			time.Sleep(time.Second * time.Duration(int(math.Pow(h.c.retryFactor, float64(retries)))))
 			retries++
-			if retries > h.c.retries {
+			if retries < h.c.retries {
 				continue
 			}
 
@@ -135,7 +135,7 @@ func (h *httpwrapper) getRequest(method, url, name string, res interface{}) erro
 			prom.TrackDependency(prom.DependencyHTTP, name, prom.StatusFailed, time.Since(s).Seconds())
 			time.Sleep(time.Second * time.Duration(int(math.Pow(h.c.retryFactor, float64(retries)))))
 			retries++
-			if retries > h.c.retries {
+			if retries < h.c.retries {
 				continue
 			}
 
@@ -155,7 +155,7 @@ func (h *httpwrapper) getRequest(method, url, name string, res interface{}) erro
 			h.l.Errorf("Response code is greater than 500. Code: %d", response.StatusCode)
 			time.Sleep(time.Second * time.Duration(int(math.Pow(h.c.retryFactor, float64(retries)))))
 			retries++
-			if retries > h.c.retries {
+			if retries < h.c.retries {
 				continue
 			}
 
