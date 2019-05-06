@@ -3,9 +3,12 @@ package http
 import (
 	"bytes"
 	"encoding/json"
+	"io"
 	"io/ioutil"
 	"math"
 	"net/http"
+	net_url "net/url"
+	"strings"
 	"time"
 
 	"github.com/FenixAra/go-prom/prom"
@@ -33,16 +36,24 @@ func (h *httpwrapper) MakeRequest(method, url, name string, req, res interface{}
 	for {
 		var body []byte
 		var err error
+		var reqBody io.Reader
 		if req != nil {
-			body, err = json.Marshal(req)
-			if err != nil {
-				h.l.Errorf("Unable to marshal req: %+v. Err: %+v", req, err)
-				return err
+			switch req.(type) {
+			case net_url.Values:
+				reqBody = strings.NewReader(req.(net_url.Values).Encode())
+			default:
+				body, err = json.Marshal(req)
+				if err != nil {
+					h.l.Errorf("Unable to marshal req: %+v. Err: %+v", req, err)
+					return err
+				}
+
+				reqBody = bytes.NewBuffer(body)
 			}
 		}
 
 		s := time.Now()
-		request, err := http.NewRequest(method, url, bytes.NewBuffer(body))
+		request, err := http.NewRequest(method, url, reqBody)
 		if err != nil {
 			h.l.Errorf("Unable to create new HTTP Req. Err: %+v", err)
 			continue
