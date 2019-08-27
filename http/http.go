@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"github.com/FenixAra/go-prom/prom"
-	"github.com/FenixAra/go-util/log"
+	"github.com/swecabin/go-util/log"
 )
 
 type httpwrapper struct {
